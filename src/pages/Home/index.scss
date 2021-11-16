@@ -1,0 +1,50 @@
+
+.board-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+
+  .player-status {
+    width: 100%;
+    max-width: 200px;
+    margin-top: 80px;
+    margin-right: 100px;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .status-desc {
+      padding: 20px;
+    }
+
+    .restart {
+      width: 100%;
+      padding: 5px 20px;
+      background: none;
+      border: 1px solid black;
+      cursor: pointer;
+      transition: .25s;
+
+      &:hover {
+        background: grey;
+        color: white;
+      }
+    }
+  }
+
+  .board-status {
+    padding: 4px;
+    border: 3px solid grey;
+
+    .board-row {
+      &:after {
+        clear: both;
+        content: "";
+        display: table;
+
+      }
+    }
+  }
+
+}
