@@ -1,88 +1,106 @@
-import {useState, useRef, useEffect} from 'react'
+import {useState} from 'react'
 import './index.scss'
-import Grid from '../../components/Grid'
-const Home = () => {
-  const [board, setBoard] = useState(Array(19).fill(Array(19).fill(null)))
-  const [winner, setWinner] = useState(null)
-  const blackIsNext = useRef(false)
-  const currentX = useRef()
-  const currentY = useRef()
 
-  function handleChessClick(x, y) {
-    currentX.current = x
-    currentY.current = y
-    changeBoard()
+const Home = () => {
+  const [board, setBoard] = useState({
+    squares: Array(19 * 19).fill(null),
+    xIsNext: true,
+    currentX: null,
+    currentY: null
+  })
+  const block = Array(19 * 19).fill(null)
+
+  const renderSquare = (i) => {
+    return <Square value={board.squares[i]} onClick={() => handleClick(i)}/>
   }
 
-  function changeBoard() {
-    setBoard(board => {
-      return board.map((row, y) => {
-        if (y !== currentY.current) return row
-        return row.map((col, x) => {
-          if (x !== currentX.current) return col
-          return x = blackIsNext.current ? 'black' : 'white'
-        })
-      })
+  function calculateWinner(squares, x, y) {
+    if (x === null || y === null) {
+      return null;
+    }
+    let coordinates = []
+    for (let i = 0; i < 19; i++) {
+      const start = i * 19
+      const end = start + 19
+      coordinates.push(squares.slice(start, end))
+    }
+    const currentPieces = coordinates[y][x]
+
+    function checkLine(currentX, currentY, directionX, directionY) {
+      let nextX = currentX
+      let nextY = currentY
+      let lineLength = 0
+      do {
+        nextX += directionX
+        nextY += directionY
+        if (
+          nextX >= 0 &&
+          nextX < 19 &&
+          nextY >= 0 &&
+          nextY < 19 &&
+          coordinates[nextY][nextX] === currentPieces
+        ) {
+          lineLength += 1
+        } else {
+          break
+        }
+      } while (lineLength)
+      return lineLength
+    }
+
+    if (
+      checkLine(x, y, 1, 0) + checkLine(x, y, -1, 0) >= 4 ||
+      checkLine(x, y, 0, 1) + checkLine(x, y, 0, -1) >= 4 ||
+      checkLine(x, y, 1, -1) + checkLine(x, y, -1, 1) >= 4 ||
+      checkLine(x, y, 1, 1) + checkLine(x, y, -1, -1) >= 4
+    ) {
+      return currentPieces
+    }
+    return null
+  }
+
+  const handleClick = (i) => {
+    const {squares, currentX, currentY} = board
+    if (calculateWinner(squares, currentX, currentY) || squares[i]) {
+      return
+    }
+    squares[i] = board.xIsNext ? '黑棋' : '白棋'
+    setBoard({
+      squares: squares,
+      xIsNext: !board.xIsNext,
+      currentX: i % 19,
+      currentY: Math.floor((i / 19))
     })
   }
 
-  useEffect(() => {
-    if (!currentX.current && !currentY.current) return
-    calculateWinner(board, currentX.current, currentY.current)
-
-    function calculateWinner(board, x, y) {
-      if (
-        countChess(board, x, y, -1, 0) + countChess(board, x, y, 1, 0) >= 4 ||
-        countChess(board, x, y, 0, -1) + countChess(board, x, y, 0, 1) >= 4 ||
-        countChess(board, x, y, 1, 1) + countChess(board, x, y, -1, -1) >= 4 ||
-        countChess(board, x, y, -1, 1) + countChess(board, x, y, 1, -1) >= 4
-      ) {
-        return setWinner(board[y][x])
-      }
-    }
-  }, [board])
-
-  function countChess(board, x, y, directionX, directionY) {
-    let totalChess = 0
-    let findX = x + directionX
-    let findY = y + directionY
-
-    while (board[findY] && board[findY][findX] === board[y][x]) {
-      findX = findX + directionX
-      findY = findY + directionY
-      totalChess++
-    }
-    return totalChess
+  const Square = (props) => {
+    return (
+      <button className='square' onClick={props.onClick}>
+        {props.value && (
+          <div className={props.value === '黑棋' ? 'black' : 'white'}></div>
+        )}
+      </button>
+    )
   }
 
-  function handleRestartClick() {
-    window.location.reload()
+  const winner = calculateWinner(board.squares, board.currentX, board.currentY)
+  let status
+  if (winner) {
+    status = '遊戲結束!! ' + winner + '獲勝'
+  } else {
+    status = '輪到: ' + (board.xIsNext ? '黑棋' : '白棋')
   }
-
   return (
-    <>
-      <div className={'board-wrapper'}>
-        <div className={'PlayerStatus'}>
-          {
-            (winner && <div className={'status-desc'}>獲勝方 : {winner}</div>) ||
-            (!winner && <div className={'status-desc'}>輪到 : {blackIsNext.current ? 'black' : 'white'}</div>)
-          }
-          <div className={'restart'} onClick={handleRestartClick}>重來</div>
-        </div>
-        <div className={'board-status'}>
-          {board.map((row, y) => {
-            return (
-              <div className={'board-row'} key={y}>
-                {row.map((col, x) => {
-                  return <Grid key={x} x={x} y={y} blackIsNext={blackIsNext} handleChessClick={handleChessClick}
-                               winner={winner}/>
-                })}
-              </div>
-            )
-          })}
+    <div className='game-board'>
+      <div className='status'>{status}</div>
+      <div className='board'>
+        <div className='board_block'>
+          {block.map((item, index) => (
+            <div className='block'>{renderSquare(index)}</div>
+          ))}
         </div>
       </div>
-    </>
+    </div>
   )
 }
 
