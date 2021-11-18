@@ -83,6 +83,10 @@ const Home = () => {
     )
   }
 
+  function reset(){
+    window.location.reload()
+  }
+
   const winner = calculateWinner(board.squares, board.currentX, board.currentY)
   let status
   if (winner) {
@@ -93,6 +97,7 @@ const Home = () => {
   return (
     <div className='game-board'>
       <div className='status'>{status}</div>
+      <div className='reset' onClick={reset}>重新游戏</div>
       <div className='board'>
         <div className='board_block'>
           {block.map((item, index) => (
